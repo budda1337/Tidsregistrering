@@ -1,0 +1,207 @@
+﻿@page
+@model StatistikModel
+@{
+    ViewData["Title"] = "Statistik - Tidsregistrering";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h2><i class="bi bi-bar-chart"></i> Statistik Oversigt</h2>
+        <p class="text-muted">Oversigt over dine tidsregistreringer for @Model.FullName</p>
+    </div>
+</div>
+
+<!-- Overordnede statistikker -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-list-check display-4"></i>
+                <h3 class="mt-2">@Model.TotalRegistreringer</h3>
+                <p class="mb-0">Registreringer</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-clock-history display-4"></i>
+                <h3 class="mt-2">@Model.TotalTimer t @Model.TotalMinutter m</h3>
+                <p class="mb-0">Total Tid</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-speedometer2 display-4"></i>
+                <h3 class="mt-2">@Model.GennemsnitTimer t @Model.GennemsnitMinutter m</h3>
+                <p class="mb-0">Gennemsnit per Registrering</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-building display-4"></i>
+                <h3 class="mt-2">@Model.AntalAfdelinger</h3>
+                <p class="mb-0">Afdelinger Brugt</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Afdeling fordeling -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-pie-chart"></i> Tid Fordelt per Afdeling
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.AfdelingStats.Any())
+                {
+                    @foreach (var afdeling in Model.AfdelingStats)
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold">@afdeling.Key</span>
+                                <span class="text-muted">@afdeling.Value.Timer t @afdeling.Value.Minutter m (@afdeling.Value.Procent%)</span>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-primary" role="progressbar"
+                                     style="width: @afdeling.Value.Procent%"
+                                     aria-valuenow="@afdeling.Value.Procent"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    @afdeling.Value.Antal reg.
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <p class="text-muted mt-3">Ingen data at vise endnu</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick facts -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Hurtige Facts
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(Model.MestBrugteAfdeling))
+                {
+                    <div class="mb-3">
+                        <h6><i class="bi bi-trophy text-warning"></i> Mest Brugte Afdeling</h6>
+                        <p class="mb-0">@Model.MestBrugteAfdeling</p>
+                        <small class="text-muted">@Model.AfdelingStats[Model.MestBrugteAfdeling].Timer t @Model.AfdelingStats[Model.MestBrugteAfdeling].Minutter m</small>
+                    </div>
+                }
+
+                @if (Model.SenesteRegistrering != null)
+                {
+                    <div class="mb-3">
+                        <h6><i class="bi bi-calendar-plus text-success"></i> Seneste Registrering</h6>
+                        <p class="mb-0">@Model.SenesteRegistrering.Dato.ToString("dd-MM-yyyy HH:mm")</p>
+                        <small class="text-muted">@Model.SenesteRegistrering.Afdeling</small>
+                    </div>
+                }
+
+                @if (Model.FørsteRegistrering != null)
+                {
+                    <div class="mb-3">
+                        <h6><i class="bi bi-calendar text-primary"></i> Første Registrering</h6>
+                        <p class="mb-0">@Model.FørsteRegistrering.Dato.ToString("dd-MM-yyyy HH:mm")</p>
+                        <small class="text-muted">@Model.FørsteRegistrering.Afdeling</small>
+                    </div>
+                }
+
+                @if (Model.TotalMinutterAlt > 0)
+                {
+                    <div class="mb-3">
+                        <h6><i class="bi bi-calculator text-info"></i> I Andre Enheder</h6>
+                        <p class="mb-1"><strong>@Model.TotalMinutterAlt</strong> minutter</p>
+                        <p class="mb-1"><strong>@Model.TotalTimerDecimal</strong> timer</p>
+                        <p class="mb-0"><strong>@Model.ArbejdsdageDecimal</strong> arbejdsdage (8t)</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Aktivitet oversigt -->
+        @if (Model.TotalRegistreringer > 0)
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-activity"></i> Aktivitet Niveau
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var aktivitetScore = (Model.TotalRegistreringer * 10 + Model.AntalAfdelinger * 5);
+                    }
+                    @if (aktivitetScore >= 100)
+                    {
+                        <div class="text-center">
+                            <i class="bi bi-fire display-1 text-danger"></i>
+                            <h4 class="text-danger">Meget Aktiv!</h4>
+                            <p>Du har registreret en masse tid på tværs af flere afdelinger.</p>
+                        </div>
+                    }
+                    else if (aktivitetScore >= 50)
+                    {
+                        <div class="text-center">
+                            <i class="bi bi-lightning display-1 text-warning"></i>
+                            <h4 class="text-warning">Godt i Gang!</h4>
+                            <p>Du har en god registrerings-rytme.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center">
+                            <i class="bi bi-seedling display-1 text-success"></i>
+                            <h4 class="text-success">God Start!</h4>
+                            <p>Du er kommet godt i gang med registreringer.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Handlinger -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>Hvad vil du gøre nu?</h5>
+                <div class="btn-group" role="group">
+                    <a href="/" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Ny Registrering
+                    </a>
+                    <a href="/Registreringer" class="btn btn-outline-primary">
+                        <i class="bi bi-list-ul"></i> Se Alle Registreringer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
