@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Tidsregistrering.Data;
@@ -46,6 +47,43 @@ namespace Tidsregistrering.Pages
                 .Where(r => r.Brugernavn == Username)
                 .OrderByDescending(r => r.Dato)
                 .ToListAsync();
+        }
+
+        public async Task<IActionResult> OnPostDeleteAsync(int id)
+        {
+            LoadUserInfo(); // Vigtigt! Vi skal have brugerinfo også ved POST
+
+            var registrering = await _context.Registreringer
+                .FirstOrDefaultAsync(r => r.Id == id && r.Brugernavn == Username);
+
+            if (registrering != null)
+            {
+                _context.Registreringer.Remove(registrering);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEditAsync(int editId, int editMinutter, string editAfdeling, string? editBemærkninger, DateTime? editDatoUdført)
+        {
+            LoadUserInfo(); // Vigtigt! Vi skal have brugerinfo også ved POST
+
+            var registrering = await _context.Registreringer
+                .FirstOrDefaultAsync(r => r.Id == editId && r.Brugernavn == Username);
+
+            if (registrering != null)
+            {
+                // Opdater registreringen
+                registrering.Minutter = editMinutter;
+                registrering.Afdeling = editAfdeling;
+                registrering.Bemærkninger = editBemærkninger;
+                registrering.DatoUdført = editDatoUdført;
+
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToPage();
         }
     }
 }

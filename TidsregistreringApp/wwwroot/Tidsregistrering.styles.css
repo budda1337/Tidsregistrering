@@ -3,47 +3,153 @@
 for details on configuring this project to bundle and minify static web assets. */
 
 a.navbar-brand[b-v9rkvqfrk7] {
-  white-space: normal;
-  text-align: center;
-  word-break: break-all;
+    white-space: normal;
+    text-align: center;
+    word-break: break-all;
 }
 
 a[b-v9rkvqfrk7] {
-  color: #0077cc;
+    color: #0077cc;
 }
 
 .btn-primary[b-v9rkvqfrk7] {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+    border-radius: 8px; /* Runde hjørner på knapper */
 }
 
 .nav-pills .nav-link.active[b-v9rkvqfrk7], .nav-pills .show > .nav-link[b-v9rkvqfrk7] {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
 }
 
 .border-top[b-v9rkvqfrk7] {
-  border-top: 1px solid #e5e5e5;
+    border-top: 1px solid #e5e5e5;
 }
+
 .border-bottom[b-v9rkvqfrk7] {
-  border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .box-shadow[b-v9rkvqfrk7] {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
 }
 
 button.accept-policy[b-v9rkvqfrk7] {
-  font-size: 1rem;
-  line-height: inherit;
+    font-size: 1rem;
+    line-height: inherit;
 }
 
 .footer[b-v9rkvqfrk7] {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  line-height: 60px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+}
+
+/* Professionel navigation styling */
+.navbar[b-v9rkvqfrk7] {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Skygge under navigation */
+}
+
+.nav-link[b-v9rkvqfrk7] {
+    transition: all 0.3s ease;
+    border-radius: 12px !important; /* Pæne runde hjørner */
+    margin: 0 4px;
+    padding: 12px 20px !important; /* Mere padding for bedre klik-område */
+    font-weight: 500; /* Lidt tykkere tekst */
+    position: relative;
+    overflow: hidden;
+}
+
+    .nav-link:hover[b-v9rkvqfrk7] {
+        background-color: #f8f9fa !important;
+        transform: translateY(-1px); /* Lille lift effekt */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    /* Runde kanter på Bootstrap's bg-primary klasse */
+    .nav-link.bg-primary[b-v9rkvqfrk7] {
+        border-radius: 12px !important;
+        box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3) !important;
+    }
+
+        .nav-link.bg-primary:hover[b-v9rkvqfrk7] {
+            border-radius: 12px !important;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4) !important;
+        }
+
+/* Logo styling */
+.navbar-brand img[b-v9rkvqfrk7] {
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover img[b-v9rkvqfrk7] {
+    transform: scale(1.05); /* Lille zoom på logo */
+}
+
+/* Card styling forbedringer */
+.card[b-v9rkvqfrk7] {
+    border-radius: 12px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+    border: none !important;
+    transition: all 0.3s ease;
+}
+
+    .card:hover[b-v9rkvqfrk7] {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12) !important;
+    }
+
+.card-header[b-v9rkvqfrk7] {
+    border-radius: 12px 12px 0 0 !important;
+    border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+    font-weight: 600;
+}
+
+/* Button forbedringer */
+.btn[b-v9rkvqfrk7] {
+    border-radius: 8px !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+    .btn:hover[b-v9rkvqfrk7] {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+/* Form inputs */
+.form-control[b-v9rkvqfrk7], .form-select[b-v9rkvqfrk7] {
+    border-radius: 8px !important;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+    .form-control:focus[b-v9rkvqfrk7], .form-select:focus[b-v9rkvqfrk7] {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15) !important;
+    }
+
+/* Alert styling */
+.alert[b-v9rkvqfrk7] {
+    border-radius: 10px !important;
+    border: none !important;
+}
+
+/* Badge styling */
+.badge[b-v9rkvqfrk7] {
+    border-radius: 6px !important;
+}
+
+/* Progress bar */
+.progress[b-v9rkvqfrk7] {
+    border-radius: 8px !important;
+}
+
+.progress-bar[b-v9rkvqfrk7] {
+    border-radius: 8px !important;
 }

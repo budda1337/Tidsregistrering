@@ -176,3 +176,129 @@ else
         </div>
     </div>
 }
+
+<!-- Slet form - skal være udenfor if-blokken -->
+<form method="post" asp-page-handler="Delete" style="display: none;" id="deleteForm">
+    <input type="hidden" name="id" id="deleteId" />
+</form>
+
+<!-- Rediger Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">
+                    <i class="bi bi-pencil-square"></i> Rediger Registrering
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-page-handler="Edit" id="editForm">
+                <div class="modal-body">
+                    <input type="hidden" name="editId" id="editFormId" />
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editDatoUdført" class="form-label">
+                                    <i class="bi bi-calendar3"></i> Dato for udført arbejde
+                                </label>
+                                <input type="date" class="form-control" name="editDatoUdført" id="editDatoUdført" />
+                                <small class="form-text text-muted">Valgfrit - hvis ikke angivet bruges registreringsdato</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editMinutter" class="form-label">
+                                    <i class="bi bi-clock"></i> Tid brugt (minutter) *
+                                </label>
+                                <input type="number" class="form-control" name="editMinutter" id="editMinutter" min="1" required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editAfdeling" class="form-label">
+                            <i class="bi bi-building"></i> Afdeling *
+                        </label>
+                        <select class="form-select" name="editAfdeling" id="editAfdeling" required>
+                            <option value="">Vælg afdeling...</option>
+                            <option value="Arbejdsmarkedsafdelingen">Arbejdsmarkedsafdelingen</option>
+                            <option value="Børne- og Familieafdelingen">Børne- og Familieafdelingen</option>
+                            <option value="Dagtilbudsafdelingen">Dagtilbudsafdelingen</option>
+                            <option value="Erhvervsafdelingen og Ledelsessekretariat">Erhvervsafdelingen og Ledelsessekretariat</option>
+                            <option value="Fælles">Fælles</option>
+                            <option value="IT-afdelingen">IT-afdelingen</option>
+                            <option value="Kultur- og Fritidsafdelingen">Kultur- og Fritidsafdelingen</option>
+                            <option value="Skoleafdelingen">Skoleafdelingen</option>
+                            <option value="Socialafdelingen">Socialafdelingen</option>
+                            <option value="Sundheds- og Ældreafdelingen">Sundheds- og Ældreafdelingen</option>
+                            <option value="Teknik- og Miljøafdelingen">Teknik- og Miljøafdelingen</option>
+                            <option value="Økonomi- og Personaleafdelingen">Økonomi- og Personaleafdelingen</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editBemærkninger" class="form-label">
+                            <i class="bi bi-chat-left-text"></i> Bemærkninger
+                        </label>
+                        <textarea class="form-control" name="editBemærkninger" id="editBemærkninger" rows="4" placeholder="Beskrivelse af arbejdet..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Annuller
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Gem Ændringer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Alle registreringer data til JavaScript (til rediger-funktionen)
+        var registreringer = [
+            @foreach (var reg in Model.Registreringer)
+            {
+                @Html.Raw("{")
+                @Html.Raw($"id: {reg.Id},")
+                @Html.Raw($"minutter: {reg.Minutter},")
+                @Html.Raw($"afdeling: '{Html.Raw(reg.Afdeling.Replace("'", "\\'"))}',")
+                @Html.Raw($"bemærkninger: '{Html.Raw((reg.Bemærkninger ?? "").Replace("'", "\\'").Replace("\n", "\\n"))}',")
+                @Html.Raw($"datoUdført: '{(reg.DatoUdført?.ToString("yyyy-MM-dd") ?? "")}'")
+                @Html.Raw("},")
+            }
+        ];
+
+        function confirmDelete(id) {
+            if (confirm('Er du sikker på at du vil slette denne registrering?')) {
+                console.log('Sletter registrering med ID: ' + id);
+                document.getElementById('deleteId').value = id;
+                document.getElementById('deleteForm').submit();
+            }
+        }
+
+        function editRegistrering(id) {
+            // Find registreringen i vores data
+            var reg = registreringer.find(r => r.id === id);
+            if (!reg) {
+                alert('Kunne ikke finde registrering!');
+                return;
+            }
+
+            // Udfyld modal formularen
+            document.getElementById('editFormId').value = reg.id;
+            document.getElementById('editMinutter').value = reg.minutter;
+            document.getElementById('editAfdeling').value = reg.afdeling;
+            document.getElementById('editBemærkninger').value = reg.bemærkninger;
+            document.getElementById('editDatoUdført').value = reg.datoUdført;
+
+            // Vis modal
+            var modal = new bootstrap.Modal(document.getElementById('editModal'));
+            modal.show();
+        }
+    </script>
+}

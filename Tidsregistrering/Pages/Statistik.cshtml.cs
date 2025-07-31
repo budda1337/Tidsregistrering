@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Tidsregistrering.Data;
@@ -14,34 +15,57 @@ namespace Tidsregistrering.Pages
             _context = context;
         }
 
-        // User info
+        // Filter properties
+        [BindProperty(SupportsGet = true)]
+        public DateTime? FraDato { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public DateTime? TilDato { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? ValgtAfdeling { get; set; }
+
+        // Current user info
         public string Username { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
 
-        // Overall statistics
+        // Total statistics for ALL users
         public int TotalRegistreringer { get; set; }
         public int TotalTimer { get; set; }
         public int TotalMinutter { get; set; }
         public int TotalMinutterAlt { get; set; }
-        public int GennemsnitTimer { get; set; }
-        public int GennemsnitMinutter { get; set; }
+        public int AntalBrugere { get; set; }
         public int AntalAfdelinger { get; set; }
+
+        // Top users
+        public List<BrugerStatModel> TopBrugere { get; set; } = new();
 
         // Department statistics
         public Dictionary<string, AfdelingStatModel> AfdelingStats { get; set; } = new();
         public string MestBrugteAfdeling { get; set; } = string.Empty;
 
-        // Date info
-        public Registrering? SenesteRegistrering { get; set; }
-        public Registrering? FørsteRegistrering { get; set; }
+        // Monthly activity
+        public List<MånedStatModel> MånedligAktivitet { get; set; } = new();
+
+        // Weekly activity (0 = Sunday, 1 = Monday, etc.)
+        public Dictionary<int, UgeStatModel> UgentligAktivitet { get; set; } = new();
+
+        // Date ranges
+        public DateTime? FørsteRegistrering { get; set; }
+        public DateTime? SenesteRegistrering { get; set; }
+
+        // Available departments for filter
+        public List<string> Afdelinger { get; set; } = new();
 
         // Calculated properties
         public decimal TotalTimerDecimal => Math.Round((decimal)TotalMinutterAlt / 60, 1);
         public decimal ArbejdsdageDecimal => Math.Round((decimal)TotalMinutterAlt / 480, 2);
+        public decimal GennemsnitPerBruger => AntalBrugere > 0 ? Math.Round((decimal)TotalMinutterAlt / AntalBrugere / 60, 1) : 0;
 
         public async Task OnGetAsync()
         {
             LoadUserInfo();
+            await LoadAfdelingerAsync();
             await LoadStatisticsAsync();
         }
 
@@ -60,10 +84,37 @@ namespace Tidsregistrering.Pages
             }
         }
 
+        private async Task LoadAfdelingerAsync()
+        {
+            Afdelinger = await _context.Registreringer
+                .Select(r => r.Afdeling)
+                .Distinct()
+                .OrderBy(a => a)
+                .ToListAsync();
+        }
+
         private async Task LoadStatisticsAsync()
         {
-            var registreringer = await _context.Registreringer
-                .Where(r => r.Brugernavn == Username)
+            // Build base query
+            var query = _context.Registreringer.AsQueryable();
+
+            // Apply filters
+            if (FraDato.HasValue)
+            {
+                query = query.Where(r => r.Dato.Date >= FraDato.Value.Date);
+            }
+
+            if (TilDato.HasValue)
+            {
+                query = query.Where(r => r.Dato.Date <= TilDato.Value.Date);
+            }
+
+            if (!string.IsNullOrEmpty(ValgtAfdeling))
+            {
+                query = query.Where(r => r.Afdeling == ValgtAfdeling);
+            }
+
+            var registreringer = await query
                 .OrderByDescending(r => r.Dato)
                 .ToListAsync();
 
@@ -78,12 +129,49 @@ namespace Tidsregistrering.Pages
             TotalTimer = TotalMinutterAlt / 60;
             TotalMinutter = TotalMinutterAlt % 60;
 
-            // Average per registration
-            var gennemsnitMinutter = (double)TotalMinutterAlt / TotalRegistreringer;
-            GennemsnitTimer = (int)(gennemsnitMinutter / 60);
-            GennemsnitMinutter = (int)(gennemsnitMinutter % 60);
+            AntalBrugere = registreringer.Select(r => r.Brugernavn).Distinct().Count();
+
+            // Date ranges
+            FørsteRegistrering = registreringer.Min(r => r.Dato);
+            SenesteRegistrering = registreringer.Max(r => r.Dato);
+
+            // Top users
+            await LoadTopBrugereAsync(registreringer);
 
             // Department statistics
+            await LoadAfdelingStatsAsync(registreringer);
+
+            // Monthly activity
+            await LoadMånedligAktivitetAsync(registreringer);
+
+            // Weekly activity
+            await LoadUgentligAktivitetAsync(registreringer);
+        }
+
+        private async Task LoadTopBrugereAsync(List<Registrering> registreringer)
+        {
+            var brugerGroups = registreringer
+                .GroupBy(r => new { r.Brugernavn, r.FuldeNavn })
+                .Select(g => new BrugerStatModel
+                {
+                    Brugernavn = g.Key.Brugernavn,
+                    FuldeNavn = g.Key.FuldeNavn ?? g.Key.Brugernavn.Split('\\').LastOrDefault() ?? g.Key.Brugernavn,
+                    AntalRegistreringer = g.Count(),
+                    TotalMinutter = g.Sum(r => r.Minutter),
+                    Timer = g.Sum(r => r.Minutter) / 60,
+                    Minutter = g.Sum(r => r.Minutter) % 60,
+                    SenesteAktivitet = g.Max(r => r.Dato),
+                    AntalAfdelinger = g.Select(r => r.Afdeling).Distinct().Count()
+                })
+                .OrderByDescending(b => b.TotalMinutter)
+                .Take(10)
+                .ToList();
+
+            TopBrugere = brugerGroups;
+        }
+
+        private async Task LoadAfdelingStatsAsync(List<Registrering> registreringer)
+        {
             var afdelingGroups = registreringer.GroupBy(r => r.Afdeling);
 
             foreach (var group in afdelingGroups)
@@ -97,7 +185,8 @@ namespace Tidsregistrering.Pages
                     TotalMinutter = afdelingMinutter,
                     Timer = afdelingMinutter / 60,
                     Minutter = afdelingMinutter % 60,
-                    Procent = procent
+                    Procent = procent,
+                    AntalBrugere = group.Select(r => r.Brugernavn).Distinct().Count()
                 };
             }
 
@@ -108,11 +197,76 @@ namespace Tidsregistrering.Pages
 
             AntalAfdelinger = AfdelingStats.Count;
             MestBrugteAfdeling = AfdelingStats.FirstOrDefault().Key ?? string.Empty;
-
-            // Date ranges
-            SenesteRegistrering = registreringer.First(); // Already ordered by date desc
-            FørsteRegistrering = registreringer.Last();
         }
+
+        private async Task LoadMånedligAktivitetAsync(List<Registrering> registreringer)
+        {
+            var månedGroups = registreringer
+                .GroupBy(r => new { r.Dato.Year, r.Dato.Month })
+                .Select(g => new MånedStatModel
+                {
+                    År = g.Key.Year,
+                    Måned = g.Key.Month,
+                    MånedNavn = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMMM yyyy"),
+                    AntalRegistreringer = g.Count(),
+                    TotalMinutter = g.Sum(r => r.Minutter),
+                    Timer = g.Sum(r => r.Minutter) / 60,
+                    AntalBrugere = g.Select(r => r.Brugernavn).Distinct().Count()
+                })
+                .OrderBy(m => m.År)
+                .ThenBy(m => m.Måned)
+                .ToList();
+
+            MånedligAktivitet = månedGroups;
+        }
+
+        private async Task LoadUgentligAktivitetAsync(List<Registrering> registreringer)
+        {
+            var ugeGroups = registreringer
+                .GroupBy(r => (int)r.Dato.DayOfWeek)
+                .ToDictionary(
+                    g => g.Key,
+                    g => new UgeStatModel
+                    {
+                        DagNavn = ((DayOfWeek)g.Key).ToString() switch
+                        {
+                            "Monday" => "Mandag",
+                            "Tuesday" => "Tirsdag",
+                            "Wednesday" => "Onsdag",
+                            "Thursday" => "Torsdag",
+                            "Friday" => "Fredag",
+                            "Saturday" => "Lørdag",
+                            "Sunday" => "Søndag",
+                            _ => "Ukendt"
+                        },
+                        AntalRegistreringer = g.Count(),
+                        TotalMinutter = g.Sum(r => r.Minutter),
+                        Timer = g.Sum(r => r.Minutter) / 60
+                    }
+                );
+
+            UgentligAktivitet = ugeGroups;
+        }
+
+        public async Task<IActionResult> OnPostExportAsync()
+        {
+            // TODO: Implement Excel export
+            // This would require a library like EPPlus or ClosedXML
+            TempData["Message"] = "Excel export funktionalitet kommer snart!";
+            return RedirectToPage();
+        }
+    }
+
+    public class BrugerStatModel
+    {
+        public string Brugernavn { get; set; } = string.Empty;
+        public string FuldeNavn { get; set; } = string.Empty;
+        public int AntalRegistreringer { get; set; }
+        public int TotalMinutter { get; set; }
+        public int Timer { get; set; }
+        public int Minutter { get; set; }
+        public DateTime SenesteAktivitet { get; set; }
+        public int AntalAfdelinger { get; set; }
     }
 
     public class AfdelingStatModel
@@ -122,5 +276,25 @@ namespace Tidsregistrering.Pages
         public int Timer { get; set; }
         public int Minutter { get; set; }
         public double Procent { get; set; }
+        public int AntalBrugere { get; set; }
+    }
+
+    public class MånedStatModel
+    {
+        public int År { get; set; }
+        public int Måned { get; set; }
+        public string MånedNavn { get; set; } = string.Empty;
+        public int AntalRegistreringer { get; set; }
+        public int TotalMinutter { get; set; }
+        public int Timer { get; set; }
+        public int AntalBrugere { get; set; }
+    }
+
+    public class UgeStatModel
+    {
+        public string DagNavn { get; set; } = string.Empty;
+        public int AntalRegistreringer { get; set; }
+        public int TotalMinutter { get; set; }
+        public int Timer { get; set; }
     }
 }

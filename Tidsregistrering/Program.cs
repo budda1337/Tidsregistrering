@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Server.IISIntegration;
 using Microsoft.EntityFrameworkCore;
 using Tidsregistrering.Data;
 
@@ -6,12 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-// Add Windows Authentication
-builder.Services.AddAuthentication("Windows")
-    .AddNegotiate();
+// Add Windows Authentication - vigtigt for IIS
+builder.Services.AddAuthentication(IISDefaults.AuthenticationScheme);
 builder.Services.AddAuthorization();
 
-// Add Entity Framework - OPDATERET STI
+// Add Entity Framework
 builder.Services.AddDbContext<TidsregistreringContext>(options =>
     options.UseSqlite("Data Source=C:\\TidsregistreringData\\tidsregistrering.db"));
 
@@ -28,15 +28,19 @@ using (var scope = app.Services.CreateScope())
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    app.UseHsts();
+    // Kun brug HSTS hvis du har SSL certifikat
+    // app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// Kun redirect til HTTPS hvis du har SSL certifikat
+// app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); // VIGTIGT!
+// IIS håndterer authentication, så vi skal bare enable det
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();

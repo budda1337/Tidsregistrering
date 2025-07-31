@@ -13,8 +13,9 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">
-                    <i class="bi bi-clock-history"></i> Tidsregistrering
+                <a class="navbar-brand d-flex align-items-center" asp-area="" asp-page="/Index">
+                    <img src="~/images/ikast-brande-logo.png" alt="Ikast-Brande Kommune" height="32" class="me-2">
+                    <span><i class="bi bi-clock-history"></i> Tidsregistrering</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -23,17 +24,22 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">
-                                <i class="bi bi-house"></i> Hjem
+                            <a class="nav-link @(Context.Request.Path == "/" ? "active text-white bg-primary" : "text-dark")" asp-area="" asp-page="/Index">
+                                <i class="bi bi-plus-circle"></i> Registrer
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Registreringer">
+                            <a class="nav-link @(Context.Request.Path == "/Registreringer" ? "active text-white bg-primary" : "text-dark")" asp-area="" asp-page="/Registreringer">
                                 <i class="bi bi-list-ul"></i> Mine Registreringer
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Statistik">
+                            <a class="nav-link @(Context.Request.Path == "/Oversigt" ? "active text-white bg-primary" : "text-dark")" asp-area="" asp-page="/Oversigt">
+                                <i class="bi bi-table"></i> Oversigt
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(Context.Request.Path == "/Statistik" ? "active text-white bg-primary" : "text-dark")" asp-area="" asp-page="/Statistik">
                                 <i class="bi bi-bar-chart"></i> Statistik
                             </a>
                         </li>
@@ -62,9 +68,24 @@
             @RenderBody()
         </main>
     </div>
-    <footer class="border-top footer text-muted">
+    <footer class="border-top footer text-muted bg-light">
         <div class="container">
-            &copy; 2025 - Tidsregistrering - <a asp-area="" asp-page="/Privacy">Privacy</a>
+            <div class="row align-items-center py-3">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center">
+                        <img src="~/images/ikast-brande-logo.png" alt="Ikast-Brande Kommune" height="24" class="me-2">
+                        <span>
+                            &copy; 2025 <strong>Ikast-Brande Kommune</strong> - Internt Tidsregistreringssystem
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <span>
+                        <i class="bi bi-envelope"></i> Support: 
+                        <a href="mailto:helpdesk@ikast-brande.dk" class="text-decoration-none">helpdesk@ikast-brande.dk</a>
+                    </span>
+                </div>
+            </div>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
