@@ -23,7 +23,7 @@ namespace Tidsregistrering.Pages
         public string Department { get; set; } = "IT-afdelingen";
         public int TotalHours { get; set; }
         public int TotalMinutes { get; set; }
-        public List<string> Afdelinger { get; set; } = AfdelingerConfig.Afdelinger;
+        public List<string> Afdelinger { get; set; } = new();
         public List<Registrering> RecentRegistreringer { get; set; } = new();
 
         // Form properties
@@ -33,17 +33,21 @@ namespace Tidsregistrering.Pages
         public async Task OnGetAsync()
         {
             LoadUserInfo();
+            await LoadAfdelingerAsync();
             await LoadUserStatsAsync();
+            await LoadRecentRegistreringerAsync();
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
-            // Load user info FØRST
+            // Load user info og afdelinger FØRST
             LoadUserInfo();
+            await LoadAfdelingerAsync();
 
             if (!ModelState.IsValid)
             {
                 await LoadUserStatsAsync();
+                await LoadRecentRegistreringerAsync();
                 return Page();
             }
 
@@ -72,9 +76,27 @@ namespace Tidsregistrering.Pages
             // Reset form
             NewRegistrering = new NewRegistreringModel();
 
+            await LoadAfdelingerAsync();
             await LoadUserStatsAsync();
+            await LoadRecentRegistreringerAsync();
 
             return Page();
+        }
+
+        private async Task LoadAfdelingerAsync()
+        {
+            // Hent alle aktive afdelinger fra MasterAfdelinger tabellen
+            Afdelinger = await _context.MasterAfdelinger
+                .Where(a => a.Aktiv)
+                .Select(a => a.Navn)
+                .OrderBy(a => a)
+                .ToListAsync();
+
+            // Fallback til hardcoded liste hvis ingen afdelinger i master tabel
+            if (!Afdelinger.Any())
+            {
+                Afdelinger = AfdelingerConfig.Afdelinger;
+            }
         }
 
         private void LoadUserInfo()
@@ -114,9 +136,6 @@ namespace Tidsregistrering.Pages
                 Department = "Unknown";
                 Console.WriteLine($"AD Error: {ex.Message}");
             }
-
-            // Til database gemmes stadig det fulde username (IBK\adm-chrje)
-            // så vi kan finde registreringerne igen
         }
 
         private string? GetDepartmentFromAD(UserPrincipal userPrincipal)
@@ -168,6 +187,11 @@ namespace Tidsregistrering.Pages
 
             // Hent seneste 5 registreringer
             RecentRegistreringer = userRegistreringer.Take(5).ToList();
+        }
+
+        private async Task LoadRecentRegistreringerAsync()
+        {
+            // Dette metode kaldes nu fra LoadUserStatsAsync for at undgå dublering
         }
     }
 
